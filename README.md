@@ -4,7 +4,7 @@
 
 DataRubro es una plataforma digital que ayuda a micro y pequeños empresarios a tomar mejores decisiones usando sus propios datos de ventas e inventario. Sin conocimientos técnicos, sin instalación.
 
-🌐 **Demo en vivo:** [tu-usuario.github.io/datarubro](https://tu-usuario.github.io/datarubro)
+🌐 **Demo en vivo:** [jhoandryA.github.io/datarubro](https://jhoandryA.github.io/datarubro)
 
 ---
 
