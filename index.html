@@ -4,8 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DataRubro – Inteligencia de datos para tu negocio</title>
-  <meta name="description" content="DataRubro convierte registros de ventas e inventario en dashboards, alertas y recomendaciones para micro y pequeños negocios del Perú."/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📊</text></svg>"/>
+  <meta name="description" content="Convierte tus ventas en decisiones inteligentes."/>
   <link rel="stylesheet" href="css/main.css"/>
   <link rel="stylesheet" href="css/landing.css"/>
 </head>
@@ -14,15 +13,9 @@
 <!-- NAV -->
 <nav class="navbar">
   <div class="navbar__inner">
-    <a href="index.html" class="navbar__logo">Data<span>Rubro</span></a>
-    <ul class="navbar__links">
-      <li><a href="#como-funciona">Cómo funciona</a></li>
-      <li><a href="#rubros">Rubros</a></li>
-      <li><a href="#beneficios">Beneficios</a></li>
-      <li><a href="#precios">Precios</a></li>
-    </ul>
+    <a href="#" class="navbar__logo">Data<span>Rubro</span></a>
     <div class="navbar__cta">
-      <a href="pages/login.html" class="btn btn--outline btn--sm">Iniciar sesión</a>
+      <a href="pages/login.html" class="btn btn--outline btn--sm">Ingresar</a>
       <a href="pages/register.html" class="btn btn--primary btn--sm">Empezar gratis</a>
     </div>
   </div>
@@ -30,203 +23,96 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero__bg"></div>
-  <div class="hero__grid"></div>
-  <div class="hero__inner">
-    <div class="hero__content">
-      <div class="hero__tag">
-        <span class="badge">🇵🇪 Hecho para el Perú</span>
-      </div>
+  <div class="hero__inner" style="grid-template-columns:1fr; text-align:center">
+    <div>
+      <span class="badge">🇵🇪 Hecho para pequeños negocios del Perú</span>
       <h1 class="hero__title">
-        Tus datos de ventas,<br/>
-        <span>convertidos en decisiones</span>
+        Tus ventas diarias,<br>
+        <span>convertidas en decisiones inteligentes</span>
       </h1>
-      <p class="hero__desc">
-        DataRubro adapta los indicadores a tu rubro — bodega, restaurante, farmacia, ferretería y más —
-        para que entiendas tu negocio con solo registrar tus ventas diarias.
+      <p class="hero__desc" style="margin:auto">
+        Registra tus ventas e inventario y recibe dashboards, alertas y recomendaciones
+        adaptadas a tu rubro: bodega, restaurante, farmacia y más.
       </p>
-      <div class="hero__cta">
+      <div class="hero__cta" style="justify-content:center">
         <a href="pages/register.html" class="btn btn--primary btn--lg">Probar gratis 14 días →</a>
-        <a href="#como-funciona" class="btn btn--outline btn--lg">Ver cómo funciona</a>
-      </div>
-      <div class="hero__trust">
-        <p class="hero__trust-label">Disponible para tu tipo de negocio</p>
-        <div class="hero__rubros">
-          <span class="rubro-chip">🛒 Bodega</span>
-          <span class="rubro-chip">🍽️ Restaurante</span>
-          <span class="rubro-chip">💊 Farmacia</span>
-          <span class="rubro-chip">🔧 Ferretería</span>
-          <span class="rubro-chip">📚 Librería</span>
-          <span class="rubro-chip">👗 Ropa</span>
-        </div>
-      </div>
-    </div>
-    <div class="hero__mockup">
-      <div class="mockup-window">
-        <div class="mockup-bar">
-          <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
-        </div>
-        <div class="mockup-body">
-          <div class="mockup-kpis">
-            <div class="m-kpi"><div class="m-kpi__lbl">Ventas hoy</div><div class="m-kpi__val green">S/342</div></div>
-            <div class="m-kpi"><div class="m-kpi__lbl">Ticket prom.</div><div class="m-kpi__val">S/28</div></div>
-            <div class="m-kpi"><div class="m-kpi__lbl">Stock bajo</div><div class="m-kpi__val amber">3 prod.</div></div>
-          </div>
-          <div class="mockup-chart">
-            <div class="m-chart-title">Ventas – últimos 7 días</div>
-            <div class="m-bars" id="hero-bars"></div>
-          </div>
-          <div class="mockup-alert">
-            <span class="mockup-alert__icon">⚠️</span>
-            <span>Stock bajo: Coca-Cola 1.5L — solo 2 unidades</span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
-<section class="section" id="como-funciona">
-  <div class="container">
-    <div class="section-head text-center">
-      <span class="badge">Proceso simple</span>
-      <h2>Pasos para tomar mejores decisiones</h2>
-      <p>Sin conocimientos técnicos. Sin instalaciones. Solo tu navegador.</p>
-    </div>
-    <div class="steps-grid">
-      <div class="step-card"><div class="step-card__num">1</div><div class="step-card__icon">🏪</div><h3 class="step-card__title">Elige tu rubro</h3><p class="step-card__desc">Selecciona el tipo de negocio al registrarte. La plataforma adapta automáticamente los indicadores y formularios que más te sirven.</p></div>
-      <div class="step-card"><div class="step-card__num">2</div><div class="step-card__icon">📝</div><h3 class="step-card__title">Registra ventas e inventario</h3><p class="step-card__desc">Ingresa tus ventas diarias y el estado de tu stock con formularios rápidos y adaptados a tu rubro. En menos de 2 minutos al día.</p></div>
-      <div class="step-card"><div class="step-card__num">3</div><div class="step-card__icon">📊</div><h3 class="step-card__title">Toma decisiones con datos</h3><p class="step-card__desc">Visualiza tu dashboard con indicadores clave, recibe alertas automáticas y recomendaciones concretas para mejorar tus ganancias.</p></div>
-      <div class="step-card"><div class="step-card__num">4</div><div class="step-card__icon">📥</div><h3 class="step-card__title">Descarga tus reportes</h3><p class="step-card__desc">Genera reportes en PDF o Excel para compartir con tu contador, solicitar créditos o planificar compras de inventario.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- RUBROS -->
-<section class="section" id="rubros" style="background:var(--clr-surface)">
-  <div class="container">
-    <div class="section-head text-center">
-      <span class="badge">Personalizado por rubro</span>
-      <h2>Indicadores diseñados para tu negocio</h2>
-      <p>Cada tipo de negocio tiene métricas distintas. DataRubro las configura automáticamente.</p>
-    </div>
-    <div class="rubros-grid">
-      <div class="rubro-card"><div class="rubro-card__icon">🛒</div><div class="rubro-card__name">Bodega</div><div class="rubro-card__desc">Rotación, mermas, productos más vendidos</div></div>
-      <div class="rubro-card"><div class="rubro-card__icon">🍽️</div><div class="rubro-card__name">Restaurante</div><div class="rubro-card__desc">Platos estrella, mesas por hora, desperdicio</div></div>
-      <div class="rubro-card"><div class="rubro-card__icon">💊</div><div class="rubro-card__name">Farmacia</div><div class="rubro-card__desc">Vencimientos, medicamentos críticos, recetas</div></div>
-      <div class="rubro-card"><div class="rubro-card__icon">🔧</div><div class="rubro-card__name">Ferretería</div><div class="rubro-card__desc">Stock por categoría, pedidos frecuentes, márgenes</div></div>
-      <div class="rubro-card"><div class="rubro-card__icon">📚</div><div class="rubro-card__name">Librería</div><div class="rubro-card__desc">Temporadas, útiles escolares, rentabilidad</div></div>
-      <div class="rubro-card"><div class="rubro-card__icon">👗</div><div class="rubro-card__name">Ropa</div><div class="rubro-card__desc">Tallas, tendencias, inventario por temporada</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section class="section" id="beneficios">
-  <div class="container">
-    <div class="section-head text-center">
-      <span class="badge">Todo incluido</span>
-      <h2>Lo que obtienes con DataRubro</h2>
-      <p>Una plataforma completa para gestionar tu negocio con datos, sin complicaciones.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card"><div class="feature-card__icon">📋</div><h3 class="feature-card__title">Formularios inteligentes</h3><p class="feature-card__desc">Campos adaptados a tu rubro. Registra una venta en menos de 30 segundos con autocompletado de productos.</p></div>
-      <div class="feature-card"><div class="feature-card__icon">📊</div><h3 class="feature-card__title">Dashboard personalizado</h3><p class="feature-card__desc">Paneles con los indicadores clave de tu rubro: ventas del día, margen, productos estrella, tendencias semanales.</p></div>
-      <div class="feature-card"><div class="feature-card__icon">🔔</div><h3 class="feature-card__title">Alertas automáticas</h3><p class="feature-card__desc">Notificaciones cuando el stock baja, cuando las ventas caen o cuando detectamos algo inusual en tus datos.</p></div>
-      <div class="feature-card"><div class="feature-card__icon">💡</div><h3 class="feature-card__title">Recomendaciones accionables</h3><p class="feature-card__desc">Sugerencias concretas: qué reabastecer, cuándo hacer promociones, qué productos retirar de tu catálogo.</p></div>
-      <div class="feature-card"><div class="feature-card__icon">📥</div><h3 class="feature-card__title">Reportes descargables</h3><p class="feature-card__desc">Exporta resúmenes mensuales, comparativos y reportes de inventario en formato PDF o Excel.</p></div>
-      <div class="feature-card"><div class="feature-card__icon">🤝</div><h3 class="feature-card__title">Alianzas estratégicas</h3><p class="feature-card__desc">Con tus datos anonimizados, accede a descuentos con proveedores y beneficios exclusivos para tu rubro.</p></div>
-    </div>
-  </div>
-</section>
-
-<!-- PRICING -->
-<section class="section" id="precios" style="background:var(--clr-surface)">
-  <div class="container">
-    <div class="section-head text-center">
-      <span class="badge">Planes accesibles</span>
-      <h2>Sin contratos ni sorpresas</h2>
-      <p>Prueba gratis 14 días. Sin tarjeta de crédito requerida.</p>
-    </div>
-    <div class="pricing-grid">
-      <div class="plan-card">
-        <div class="plan-name">Gratuito</div>
-        <div class="plan-desc">Para comenzar y explorar la plataforma</div>
-        <div class="plan-price">S/ 0 <span>/ mes</span></div>
-        <div class="plan-period">Siempre gratis</div>
-        <ul class="plan-features">
-          <li>1 rubro</li><li>Hasta 50 ventas / mes</li><li>Dashboard básico</li>
-          <li>Alertas de stock</li><li class="no">Reportes descargables</li>
-          <li class="no">Recomendaciones avanzadas</li><li class="no">Soporte prioritario</li>
-        </ul>
-        <a href="pages/register.html" class="btn btn--outline" style="width:100%;justify-content:center">Empezar gratis</a>
-      </div>
-      <div class="plan-card plan-card--featured">
-        <div class="plan-badge">Más popular</div>
-        <div class="plan-name">Pro</div>
-        <div class="plan-desc">Para negocios que quieren crecer con datos</div>
-        <div class="plan-price">S/ 39 <span>/ mes</span></div>
-        <div class="plan-period">o S/ 390 / año (2 meses gratis)</div>
-        <ul class="plan-features">
-          <li>1 rubro personalizado</li><li>Ventas ilimitadas</li><li>Dashboard completo</li>
-          <li>Alertas automáticas</li><li>Reportes en PDF y Excel</li>
-          <li>Recomendaciones accionables</li><li class="no">Soporte prioritario</li>
-        </ul>
-        <a href="pages/register.html" class="btn btn--primary" style="width:100%;justify-content:center">Empezar 14 días gratis →</a>
-      </div>
-      <div class="plan-card">
-        <div class="plan-name">Negocio</div>
-        <div class="plan-desc">Para negocios con varios locales o mayor volumen</div>
-        <div class="plan-price">S/ 89 <span>/ mes</span></div>
-        <div class="plan-period">o S/ 890 / año</div>
-        <ul class="plan-features">
-          <li>Hasta 3 rubros</li><li>Todo lo del plan Pro</li><li>Comparativa entre locales</li>
-          <li>Reportes avanzados</li><li>Alianzas estratégicas</li>
-          <li>API para integraciones</li><li>Soporte prioritario 24/7</li>
-        </ul>
-        <a href="pages/register.html" class="btn btn--outline" style="width:100%;justify-content:center">Empezar 14 días gratis</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
+<!-- COMO FUNCIONA -->
 <section class="section">
-  <div class="container">
-    <div class="cta-section">
-      <span class="badge">Empieza hoy</span>
-      <h2>Tu negocio merece tomar decisiones con datos</h2>
-      <p>Únete a cientos de pequeños empresarios peruanos que ya mejoran su gestión con DataRubro.</p>
-      <a href="pages/register.html" class="btn btn--primary btn--lg">Probar gratis 14 días →</a>
+  <div class="container text-center">
+    <h2>Así de simple</h2>
+    <div class="steps-grid" style="margin-top:40px">
+      <div class="step-card">
+        <h3>1️⃣ Elige tu rubro</h3>
+        <p>La plataforma adapta automáticamente los indicadores.</p>
+      </div>
+      <div class="step-card">
+        <h3>2️⃣ Registra ventas</h3>
+        <p>En menos de 2 minutos al día desde tu celular o PC.</p>
+      </div>
+      <div class="step-card">
+        <h3>3️⃣ Toma decisiones</h3>
+        <p>Recibe alertas y recomendaciones prácticas.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<footer>
-  <div class="container">
-    <div class="footer-logo">Data<span>Rubro</span></div>
-    <p>Inteligencia de datos para pequeños negocios del Perú</p>
-    <div class="footer-links">
-      <a href="index.html">Inicio</a>
-      <a href="#como-funciona">Cómo funciona</a>
-      <a href="#precios">Precios</a>
-      <a href="pages/login.html">Iniciar sesión</a>
+<!-- BENEFICIOS -->
+<section class="section" style="background:var(--clr-surface)">
+  <div class="container text-center">
+    <h2>Lo que obtienes</h2>
+    <div class="features-grid" style="margin-top:40px">
+      <div class="feature-card">📊 Dashboard personalizado</div>
+      <div class="feature-card">🔔 Alertas automáticas</div>
+      <div class="feature-card">📥 Reportes descargables</div>
+      <div class="feature-card">💡 Recomendaciones accionables</div>
     </div>
-    <p style="margin-top:8px">© 2025 DataRubro. Todos los derechos reservados.</p>
   </div>
+</section>
+
+<!-- PRECIOS -->
+<section class="section">
+  <div class="container text-center">
+    <h2>Planes simples</h2>
+    <div class="pricing-grid" style="margin-top:40px">
+      
+      <div class="plan-card">
+        <h3>Gratuito</h3>
+        <div class="plan-price">S/ 0 <span>/ mes</span></div>
+        <p>Para empezar</p>
+        <a href="pages/register.html" class="btn btn--outline" style="width:100%">Empezar</a>
+      </div>
+
+      <div class="plan-card plan-card--featured">
+        <h3>Pro</h3>
+        <div class="plan-price">S/ 39 <span>/ mes</span></div>
+        <p>Ventas ilimitadas + reportes + recomendaciones</p>
+        <a href="pages/register.html" class="btn btn--primary" style="width:100%">Probar 14 días →</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="section">
+  <div class="container text-center">
+    <div class="cta-section">
+      <h2>Empieza hoy mismo</h2>
+      <p>Convierte tus datos en crecimiento real.</p>
+      <a href="pages/register.html" class="btn btn--primary btn--lg">Crear cuenta gratis →</a>
+    </div>
+  </div>
+</section>
+
+<footer style="text-align:center;padding:40px 0;color:var(--clr-muted)">
+  © 2025 DataRubro
 </footer>
 
-<script>
-  const heights = [45,62,38,78,55,90,72];
-  const bars = document.getElementById('hero-bars');
-  if(bars) bars.innerHTML = heights.map((h,i)=>`<div class="m-bar ${i===5?'active':''}" style="height:${h}%"></div>`).join('');
-  document.querySelectorAll('a[href^="#"]').forEach(a=>{
-    a.addEventListener('click',e=>{
-      const t=document.querySelector(a.getAttribute('href'));
-      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
-    });
-  });
-</script>
 </body>
 </html>
