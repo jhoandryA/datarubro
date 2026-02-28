@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inventario – DataRubro</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/app.css"/>
+</head>
+<body>
+<div class="app-layout" id="app-layout">
+  <main class="page-content">
+    <div class="page-header">
+      <h1>Inventario</h1>
+      <p>Gestiona tu stock, precios y recibe alertas de reabastecimiento.</p>
+    </div>
+
+    <!-- KPIs rápidos -->
+    <div class="kpi-grid" id="inv-kpis" style="margin-bottom:24px"></div>
+
+    <div class="inventory-header">
+      <div class="search-box">
+        <span class="search-box__icon">🔍</span>
+        <input type="text" id="search-inv" placeholder="Buscar producto..."/>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <select class="form-control" id="filter-stock" style="width:auto">
+          <option value="all">Todos</option>
+          <option value="low">Stock bajo</option>
+          <option value="out">Sin stock</option>
+          <option value="ok">Stock OK</option>
+        </select>
+        <button class="btn btn--primary btn--sm" id="btn-add-prod">+ Agregar producto</button>
+      </div>
+    </div>
+
+    <div class="table-wrap fade-in">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Stock actual</th>
+            <th>Stock mín.</th>
+            <th>Estado</th>
+            <th>Precio venta</th>
+            <th>Costo</th>
+            <th>Margen</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="inv-tbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL agregar/editar -->
+<div class="modal-overlay hidden" id="modal-prod">
+  <div class="modal">
+    <div class="modal__header">
+      <h2 class="modal__title" id="modal-title">Nuevo producto</h2>
+      <button class="modal__close" id="modal-close">✕</button>
+    </div>
+    <form id="prod-form" novalidate>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Nombre del producto *</label>
+        <input class="form-control" type="text" id="p-nombre" required/>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group">
+          <label class="form-label">Stock actual *</label>
+          <input class="form-control" type="number" id="p-stock" min="0" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stock mínimo *</label>
+          <input class="form-control" type="number" id="p-stockmin" min="0" required/>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:14px">
+        <div class="form-group">
+          <label class="form-label">Precio de venta (S/) *</label>
+          <input class="form-control" type="number" id="p-precio" min="0" step="0.10" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Costo (S/)</label>
+          <input class="form-control" type="number" id="p-costo" min="0" step="0.10"/>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">Categoría</label>
+        <input class="form-control" type="text" id="p-categoria" placeholder="General"/>
+      </div>
+      <div class="modal__footer">
+        <button type="button" class="btn btn--outline" id="modal-cancel">Cancelar</button>
+        <button type="submit" class="btn btn--primary">Guardar producto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/utils.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!DR.requireAuth()) throw 'Not auth';
+  buildLayout('inventario');
+
+  let editId = null;
+
+  function getStatus(p) {
+    if (p.stock === 0)           return { label:'Sin stock', cls:'danger' };
+    if (p.stock <= p.stockMin)   return { label:'Stock bajo', cls:'warn' };
+    return                               { label:'OK', cls:'ok' };
+  }
+
+  function renderTable(filter='all', query='') {
+    let inv = DR.getInventario();
+    if (query) inv = inv.filter(p=>p.nombre.toLowerCase().includes(query.toLowerCase()));
+    if (filter==='low') inv = inv.filter(p=>p.stock>0&&p.stock<=p.stockMin);
+    if (filter==='out') inv = inv.filter(p=>p.stock===0);
+    if (filter==='ok')  inv = inv.filter(p=>p.stock>p.stockMin);
+
+    const tbody = document.getElementById('inv-tbody');
+    if (!inv.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--clr-muted)">Sin productos que coincidan.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = inv.map(p=>{
+      const s   = getStatus(p);
+      const margen = p.costo ? (((p.precio-p.costo)/p.precio)*100).toFixed(0)+'%' : '—';
+      return `<tr>
+        <td><strong>${p.nombre}</strong><br/><small class="text-muted">${p.categoria||'General'}</small></td>
+        <td style="font-weight:700;font-size:1rem">${p.stock}</td>
+        <td>${p.stockMin}</td>
+        <td><span class="tag tag--${s.cls}">${s.label}</span></td>
+        <td>${fmt(p.precio)}</td>
+        <td>${p.costo?fmt(p.costo):'—'}</td>
+        <td style="color:var(--clr-primary)">${margen}</td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn--outline btn--sm" onclick="editProd('${p.id}')">Editar</button>
+            <button class="btn btn--ghost btn--sm" onclick="deleteProd('${p.id}')">🗑</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    // KPIs
+    const all = DR.getInventario();
+    const totalProds   = all.length;
+    const stockBajo    = all.filter(p=>p.stock>0&&p.stock<=p.stockMin).length;
+    const sinStock     = all.filter(p=>p.stock===0).length;
+    const valorInv     = all.reduce((s,p)=>s+(p.costo||p.precio)*p.stock,0);
+    document.getElementById('inv-kpis').innerHTML = `
+      <div class="kpi-card"><div class="kpi-card__label">Total productos</div><div class="kpi-card__value">${totalProds}</div></div>
+      <div class="kpi-card"><div class="kpi-card__label">Stock bajo</div><div class="kpi-card__value" style="color:var(--clr-accent)">${stockBajo}</div></div>
+      <div class="kpi-card"><div class="kpi-card__label">Sin stock</div><div class="kpi-card__value" style="color:var(--clr-danger)">${sinStock}</div></div>
+      <div class="kpi-card"><div class="kpi-card__label">Valor del inventario</div><div class="kpi-card__value text-primary">${fmt(valorInv)}</div></div>
+    `;
+  }
+
+  window.editProd = function(id) {
+    const p = DR.getInventario().find(p=>p.id===id);
+    if (!p) return;
+    editId = id;
+    document.getElementById('modal-title').textContent = 'Editar producto';
+    document.getElementById('p-nombre').value    = p.nombre;
+    document.getElementById('p-stock').value     = p.stock;
+    document.getElementById('p-stockmin').value  = p.stockMin;
+    document.getElementById('p-precio').value    = p.precio;
+    document.getElementById('p-costo').value     = p.costo||'';
+    document.getElementById('p-categoria').value = p.categoria||'';
+    document.getElementById('modal-prod').classList.remove('hidden');
+  };
+
+  window.deleteProd = function(id) {
+    if (!confirm('¿Eliminar este producto?')) return;
+    DR.setInventario(DR.getInventario().filter(p=>p.id!==id));
+    toast('Producto eliminado','','warning');
+    renderTable(document.getElementById('filter-stock').value, document.getElementById('search-inv').value);
+  };
+
+  document.getElementById('btn-add-prod').addEventListener('click', ()=>{
+    editId = null;
+    document.getElementById('modal-title').textContent = 'Nuevo producto';
+    document.getElementById('prod-form').reset();
+    document.getElementById('modal-prod').classList.remove('hidden');
+  });
+  document.getElementById('modal-close').addEventListener('click',  ()=>document.getElementById('modal-prod').classList.add('hidden'));
+  document.getElementById('modal-cancel').addEventListener('click', ()=>document.getElementById('modal-prod').classList.add('hidden'));
+
+  document.getElementById('prod-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const nombre   = document.getElementById('p-nombre').value.trim();
+    const stock    = parseInt(document.getElementById('p-stock').value);
+    const stockMin = parseInt(document.getElementById('p-stockmin').value);
+    const precio   = parseFloat(document.getElementById('p-precio').value);
+    const costo    = parseFloat(document.getElementById('p-costo').value)||0;
+    const categoria= document.getElementById('p-categoria').value.trim()||'General';
+    if (!nombre||isNaN(stock)||isNaN(precio)) { toast('Campos requeridos','','error'); return; }
+
+    let inv = DR.getInventario();
+    if (editId) {
+      inv = inv.map(p=>p.id===editId?{...p,nombre,stock,stockMin,precio,costo,categoria}:p);
+      toast('Producto actualizado');
+    } else {
+      inv.push({ id:'P'+Date.now(), nombre, stock, stockMin, precio, costo, categoria });
+      toast('Producto agregado');
+    }
+    DR.setInventario(inv);
+    DR.setAlertas(generateAlertas(DR.getVentas(), inv));
+    document.getElementById('modal-prod').classList.add('hidden');
+    renderTable(document.getElementById('filter-stock').value, document.getElementById('search-inv').value);
+  });
+
+  document.getElementById('search-inv').addEventListener('input', function() {
+    renderTable(document.getElementById('filter-stock').value, this.value);
+  });
+  document.getElementById('filter-stock').addEventListener('change', function() {
+    renderTable(this.value, document.getElementById('search-inv').value);
+  });
+
+  renderTable();
+</script>
+</body>
+</html>

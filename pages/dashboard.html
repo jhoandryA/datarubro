@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – DataRubro</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/app.css"/>
+</head>
+<body>
+<div class="app-layout" id="app-layout">
+  <main class="page-content" id="main-content">
+    <!-- content injected by JS -->
+  </main>
+</div>
+<div id="toast-container"></div>
+<script src="../js/utils.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!DR.requireAuth()) throw 'Not auth';
+  buildLayout('dashboard');
+
+  const user      = DR.getUser();
+  const ventas    = DR.getVentas();
+  const inventario= DR.getInventario();
+  const alertas   = DR.getAlertas();
+  const kpis      = computeKPIs(ventas, inventario);
+
+  // Last 7 days labels + totals
+  const days7 = [];
+  const totals7 = [];
+  const labels7 = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const ds = d.toISOString().split('T')[0];
+    days7.push(ds);
+    totals7.push(ventas.filter(v=>v.fecha===ds).reduce((s,v)=>s+v.total,0));
+  }
+
+  // Top products this month
+  const mes = new Date().toISOString().slice(0,7);
+  const ventasMes = ventas.filter(v=>v.fecha.startsWith(mes));
+  const prodMap = {};
+  ventasMes.forEach(v=>{ prodMap[v.producto]=(prodMap[v.producto]||0)+v.total; });
+  const topProds = Object.entries(prodMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  // Recent ventas
+  const recent = [...ventas].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,8);
+
+  // Inventario critico
+  const critico = inventario.filter(p=>p.stock<=p.stockMin).slice(0,5);
+
+  // Previous month comparison
+  const mesAnterior = new Date(); mesAnterior.setMonth(mesAnterior.getMonth()-1);
+  const mesPrev = mesAnterior.toISOString().slice(0,7);
+  const prevTotal = ventas.filter(v=>v.fecha.startsWith(mesPrev)).reduce((s,v)=>s+v.total,0);
+  const pct = prevTotal ? (((kpis.ingresosMes - prevTotal)/prevTotal)*100).toFixed(1) : 0;
+
+  const main = document.getElementById('main-content');
+  main.innerHTML = `
+    <div class="page-header fade-in">
+      <h1>Bienvenido, ${user.nombre.split(' ')[0]} 👋</h1>
+      <p>Dashboard de <strong>${user.rubro}</strong> · ${new Date().toLocaleDateString('es-PE',{weekday:'long',day:'2-digit',month:'long'})}</p>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card fade-in">
+        <div class="kpi-card__label">Ventas hoy</div>
+        <div class="kpi-card__value text-primary">${fmt(kpis.ingresosHoy)}</div>
+        <div class="kpi-card__change up">↑ ${kpis.numVentasHoy} transacciones</div>
+      </div>
+      <div class="kpi-card fade-in">
+        <div class="kpi-card__label">Ingresos del mes</div>
+        <div class="kpi-card__value">${fmt(kpis.ingresosMes)}</div>
+        <div class="kpi-card__change ${pct>=0?'up':'down'}">${pct>=0?'↑':'↓'} ${Math.abs(pct)}% vs mes anterior</div>
+      </div>
+      <div class="kpi-card fade-in">
+        <div class="kpi-card__label">Ticket promedio</div>
+        <div class="kpi-card__value">${fmt(kpis.ticketProm)}</div>
+        <div class="kpi-card__change up">↑ ${kpis.numVentasMes} ventas este mes</div>
+      </div>
+      <div class="kpi-card fade-in">
+        <div class="kpi-card__label">Productos en alerta</div>
+        <div class="kpi-card__value" style="color:${kpis.stockBajo>0?'var(--clr-accent)':'var(--clr-primary)'}">${kpis.stockBajo}</div>
+        <div class="kpi-card__change ${kpis.stockBajo>0?'down':'up'}">${kpis.stockBajo>0?'⚠️ Requieren reabastecimiento':'✓ Stock OK'}</div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="chart-row fade-in">
+      <div class="chart-box">
+        <div class="chart-box__title">Ventas últimos 7 días</div>
+        <div id="chart-ventas-semana" class="chart-canvas"></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-box__title">Top 5 productos del mes</div>
+        <div id="chart-top-prod" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- ALERTAS + INVENTARIO CRITICO -->
+    <div class="chart-row-2 fade-in">
+      <div>
+        <div class="chart-box">
+          <div class="chart-box__title">🔔 Alertas recientes</div>
+          ${alertas.slice(0,3).map(a=>`
+            <div class="alert alert--${a.tipo==='error'?'danger':a.tipo==='warn'?'warning':'success'}" style="margin-bottom:10px">
+              <span class="alert__icon">${a.tipo==='error'?'🔴':a.tipo==='warn'?'⚠️':'💡'}</span>
+              <div>
+                <div class="alert__title">${a.titulo}</div>
+                <div class="alert__desc">${a.desc}</div>
+              </div>
+            </div>`).join('') || '<p class="text-muted" style="font-size:.88rem">Sin alertas activas ✓</p>'}
+          <a href="alertas.html" class="btn btn--ghost btn--sm" style="margin-top:8px">Ver todas las alertas →</a>
+        </div>
+      </div>
+      <div>
+        <div class="chart-box">
+          <div class="chart-box__title">📦 Stock crítico</div>
+          ${critico.length ? critico.map(p=>`
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                <span style="font-size:.88rem;font-weight:600">${p.nombre}</span>
+                <span class="tag tag--${p.stock===0?'danger':'warn'}">${p.stock} u.</span>
+              </div>
+              <div class="progress">
+                <div class="progress__bar progress__bar--${p.stock===0?'danger':'warn'}" style="width:${Math.min((p.stock/p.stockMin)*50,100)}%"></div>
+              </div>
+            </div>`).join('')
+          : '<p class="text-muted" style="font-size:.88rem">Todo el inventario está en buen nivel ✓</p>'}
+          <a href="inventario.html" class="btn btn--ghost btn--sm" style="margin-top:8px">Ver inventario →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECENT SALES -->
+    <div class="chart-box fade-in" style="margin-top:0">
+      <div class="chart-box__title" style="display:flex;justify-content:space-between;align-items:center">
+        Ventas recientes
+        <a href="ventas.html" class="btn btn--primary btn--sm">+ Registrar venta</a>
+      </div>
+      <div class="table-wrap" style="margin-top:16px">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Producto</th><th>Cantidad</th><th>Precio unit.</th><th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${recent.map(v=>`
+              <tr>
+                <td>${fmtDate(v.fecha)}</td>
+                <td><strong>${v.producto}</strong></td>
+                <td>${v.cantidad}</td>
+                <td>${fmt(v.precio)}</td>
+                <td class="text-primary" style="font-weight:700">${fmt(v.total)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // Draw charts
+  const dayCodes = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+  const todayIdx = new Date().getDay();
+  const labelsRotated = dayCodes.slice(todayIdx+1).concat(dayCodes.slice(0,todayIdx+1));
+  drawBarChart('chart-ventas-semana', labelsRotated, totals7);
+
+  // Top products bar
+  const topEl = document.getElementById('chart-top-prod');
+  if (topEl && topProds.length) {
+    const maxVal = topProds[0][1];
+    topEl.innerHTML = topProds.map(([name, val])=>`
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%">${name}</span>
+          <span style="font-weight:700;color:var(--clr-primary)">${fmt(val)}</span>
+        </div>
+        <div class="progress"><div class="progress__bar" style="width:${(val/maxVal*100).toFixed(0)}%"></div></div>
+      </div>`).join('');
+  }
+</script>
+</body>
+</html>

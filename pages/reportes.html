@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reportes – DataRubro</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/app.css"/>
+</head>
+<body>
+<div class="app-layout" id="app-layout">
+  <main class="page-content">
+    <div class="page-header">
+      <h1>Reportes</h1>
+      <p>Descarga resúmenes de tu negocio en formato de texto o CSV.</p>
+    </div>
+
+    <!-- Period selector -->
+    <div class="chart-box fade-in" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div class="form-group" style="flex:1;min-width:180px">
+          <label class="form-label">Período</label>
+          <select class="form-control" id="periodo">
+            <option value="mes">Este mes</option>
+            <option value="semana">Esta semana</option>
+            <option value="ayer">Ayer</option>
+            <option value="90">Últimos 90 días</option>
+          </select>
+        </div>
+        <div id="periodo-resumen" style="flex:2;font-size:.88rem;color:var(--clr-muted);padding-top:20px"></div>
+      </div>
+    </div>
+
+    <!-- Preview -->
+    <div class="chart-row-2 fade-in" style="margin-bottom:24px">
+      <div class="chart-box">
+        <div class="chart-box__title">Ventas en el período</div>
+        <div id="rep-ventas-chart" class="chart-canvas"></div>
+        <div id="rep-totales" style="margin-top:12px;font-size:.88rem;color:var(--clr-muted)"></div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-box__title">Top productos vendidos</div>
+        <div id="rep-top" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- Report cards -->
+    <h2 style="font-size:1.1rem;margin-bottom:16px">Descargar reportes</h2>
+    <div class="report-cards fade-in">
+      <div class="report-card">
+        <div class="report-card__icon">💰</div>
+        <div class="report-card__title">Reporte de Ventas</div>
+        <div class="report-card__desc">Lista detallada de todas las ventas del período seleccionado con totales, ticket promedio y comparativas.</div>
+        <div class="report-card__footer">
+          <span class="report-card__period" id="rp-ventas-period">Este mes</span>
+          <button class="btn btn--primary btn--sm" onclick="downloadReport('ventas')">⬇ Descargar CSV</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-card__icon">📦</div>
+        <div class="report-card__title">Reporte de Inventario</div>
+        <div class="report-card__desc">Estado actual de tu stock: productos, cantidades, alertas de reabastecimiento y valor total del inventario.</div>
+        <div class="report-card__footer">
+          <span class="report-card__period">Actual</span>
+          <button class="btn btn--primary btn--sm" onclick="downloadReport('inventario')">⬇ Descargar CSV</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-card__icon">📊</div>
+        <div class="report-card__title">Resumen Ejecutivo</div>
+        <div class="report-card__desc">Indicadores clave del período: ingresos, ticket promedio, productos estrella y recomendaciones.</div>
+        <div class="report-card__footer">
+          <span class="report-card__period" id="rp-exec-period">Este mes</span>
+          <button class="btn btn--primary btn--sm" onclick="downloadReport('ejecutivo')">⬇ Descargar TXT</button>
+        </div>
+      </div>
+      <div class="report-card">
+        <div class="report-card__icon">🏆</div>
+        <div class="report-card__title">Top Productos</div>
+        <div class="report-card__desc">Ranking de productos más vendidos por ingresos y cantidad, con análisis de rentabilidad.</div>
+        <div class="report-card__footer">
+          <span class="report-card__period" id="rp-top-period">Este mes</span>
+          <button class="btn btn--primary btn--sm" onclick="downloadReport('topproductos')">⬇ Descargar CSV</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-container"></div>
+<script src="../js/utils.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!DR.requireAuth()) throw 'Not auth';
+  buildLayout('reportes');
+
+  const user = DR.getUser();
+
+  function getVentasPeriodo() {
+    const ventas = DR.getVentas();
+    const hoy = new Date().toISOString().split('T')[0];
+    const p   = document.getElementById('periodo').value;
+    if (p==='mes') {
+      const mes = hoy.slice(0,7);
+      return { ventas: ventas.filter(v=>v.fecha.startsWith(mes)), label:'Este mes ('+mes+')' };
+    }
+    if (p==='semana') {
+      const d = new Date(); d.setDate(d.getDate()-6);
+      const from = d.toISOString().split('T')[0];
+      return { ventas: ventas.filter(v=>v.fecha>=from&&v.fecha<=hoy), label:'Esta semana' };
+    }
+    if (p==='ayer') {
+      const ayer = new Date(); ayer.setDate(ayer.getDate()-1);
+      const ay = ayer.toISOString().split('T')[0];
+      return { ventas: ventas.filter(v=>v.fecha===ay), label:'Ayer ('+ay+')' };
+    }
+    if (p==='90') {
+      const d = new Date(); d.setDate(d.getDate()-89);
+      const from = d.toISOString().split('T')[0];
+      return { ventas: ventas.filter(v=>v.fecha>=from&&v.fecha<=hoy), label:'Últimos 90 días' };
+    }
+    return { ventas, label:'Todo' };
+  }
+
+  function refreshPreview() {
+    const { ventas, label } = getVentasPeriodo();
+    document.querySelectorAll('[id^="rp-"][id$="-period"]').forEach(el=>el.textContent=label);
+    const total  = ventas.reduce((s,v)=>s+v.total,0);
+    const ticket = ventas.length ? total/ventas.length : 0;
+
+    document.getElementById('periodo-resumen').innerHTML =
+      `<strong>${ventas.length}</strong> ventas · Total <strong style="color:var(--clr-primary)">${fmt(total)}</strong> · Ticket prom. <strong>${fmt(ticket)}</strong>`;
+
+    // Chart: group by day
+    const dayMap={};
+    ventas.forEach(v=>{ dayMap[v.fecha]=(dayMap[v.fecha]||0)+v.total; });
+    const days = Object.keys(dayMap).sort().slice(-14);
+    const vals = days.map(d=>dayMap[d]);
+    const lbls = days.map(d=>d.slice(5)); // MM-DD
+    drawBarChart('rep-ventas-chart', lbls, vals);
+    document.getElementById('rep-totales').textContent = `${days.length} días con ventas · Promedio diario: ${fmt(vals.length?vals.reduce((s,v)=>s+v,0)/vals.length:0)}`;
+
+    // Top products
+    const prodMap={};
+    ventas.forEach(v=>{ prodMap[v.producto]=(prodMap[v.producto]||0)+v.total; });
+    const top5 = Object.entries(prodMap).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const topEl = document.getElementById('rep-top');
+    if (!top5.length) { topEl.innerHTML='<p class="text-muted" style="font-size:.88rem">Sin datos.</p>'; return; }
+    const maxV = top5[0][1];
+    topEl.innerHTML = top5.map(([n,v])=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:4px">
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%">${n}</span>
+          <span style="font-weight:700;color:var(--clr-primary)">${fmt(v)}</span>
+        </div>
+        <div class="progress"><div class="progress__bar" style="width:${(v/maxV*100).toFixed(0)}%"></div></div>
+      </div>`).join('');
+  }
+
+  window.downloadReport = function(tipo) {
+    const { ventas, label } = getVentasPeriodo();
+    const inventario = DR.getInventario();
+    let content='', filename='', mime='text/csv;charset=utf-8;';
+
+    if (tipo==='ventas') {
+      content = 'Fecha,Producto,Cantidad,Precio Unit.,Total,Tipo Pago\n';
+      ventas.forEach(v=>{ content+=`"${v.fecha}","${v.producto}",${v.cantidad},${v.precio},${v.total},"${v.tipoPago||'Efectivo'}"\n`; });
+      filename = `DataRubro_Ventas_${label.replace(/\s/g,'_')}.csv`;
+    } else if (tipo==='inventario') {
+      content = 'Producto,Stock Actual,Stock Mínimo,Estado,Precio Venta,Costo,Categoría\n';
+      inventario.forEach(p=>{
+        const s = p.stock===0?'Sin stock':p.stock<=p.stockMin?'Stock bajo':'OK';
+        content+=`"${p.nombre}",${p.stock},${p.stockMin},"${s}",${p.precio},${p.costo||0},"${p.categoria||'General'}"\n`;
+      });
+      filename = 'DataRubro_Inventario.csv';
+    } else if (tipo==='topproductos') {
+      const prodMap={};
+      ventas.forEach(v=>{ if(!prodMap[v.producto]) prodMap[v.producto]={total:0,qty:0}; prodMap[v.producto].total+=v.total; prodMap[v.producto].qty+=v.cantidad; });
+      content = 'Producto,Total Ingresos,Cantidad Vendida,Ticket Promedio\n';
+      Object.entries(prodMap).sort((a,b)=>b[1].total-a[1].total).forEach(([n,d])=>{
+        content+=`"${n}",${d.total.toFixed(2)},${d.qty},${(d.total/d.qty).toFixed(2)}\n`;
+      });
+      filename = `DataRubro_TopProductos_${label.replace(/\s/g,'_')}.csv`;
+    } else if (tipo==='ejecutivo') {
+      mime = 'text/plain;charset=utf-8;';
+      const total  = ventas.reduce((s,v)=>s+v.total,0);
+      const ticket = ventas.length?total/ventas.length:0;
+      const prodMap={};
+      ventas.forEach(v=>{ prodMap[v.producto]=(prodMap[v.producto]||0)+v.total; });
+      const top3 = Object.entries(prodMap).sort((a,b)=>b[1]-a[1]).slice(0,3);
+      const stockBajo = inventario.filter(p=>p.stock<=p.stockMin);
+      content = `===========================================
+REPORTE EJECUTIVO – DataRubro
+${user.rubro} | ${user.negocio||user.nombre}
+Período: ${label}
+Generado: ${new Date().toLocaleDateString('es-PE')}
+===========================================
+
+RESUMEN DE VENTAS
+-----------------
+Total de ventas: ${ventas.length} transacciones
+Ingresos totales: S/ ${total.toFixed(2)}
+Ticket promedio: S/ ${ticket.toFixed(2)}
+
+TOP 3 PRODUCTOS
+---------------
+${top3.map((p,i)=>`${i+1}. ${p[0]}: S/ ${p[1].toFixed(2)}`).join('\n')}
+
+INVENTARIO
+----------
+Productos con stock bajo: ${stockBajo.length}
+${stockBajo.map(p=>`  - ${p.nombre}: ${p.stock} unidades`).join('\n')}
+
+RECOMENDACIONES
+---------------
+${stockBajo.length>0?'• Reabastecer productos con stock bajo antes de que se agoten.':'• El inventario está en buen nivel.'}
+${ticket<10?'• Considera estrategias para aumentar el ticket promedio (combos, descuentos por volumen).':'• El ticket promedio es saludable.'}
+${ventas.length<30?'• Registra todas tus ventas diariamente para mejorar la precisión del análisis.':''}
+
+===========================================
+DataRubro – datarubro.pe
+===========================================`;
+      filename = `DataRubro_Resumen_Ejecutivo_${label.replace(/\s/g,'_')}.txt`;
+    }
+
+    const blob = new Blob(['\uFEFF'+content], { type: mime });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast('✓ Reporte descargado', filename);
+  };
+
+  document.getElementById('periodo').addEventListener('change', refreshPreview);
+  refreshPreview();
+</script>
+</body>
+</html>

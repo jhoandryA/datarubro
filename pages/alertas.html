@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alertas – DataRubro</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/app.css"/>
+</head>
+<body>
+<div class="app-layout" id="app-layout">
+  <main class="page-content">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <h1>Alertas y Recomendaciones</h1>
+        <p>Detectamos situaciones que requieren tu atención.</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn--outline btn--sm" id="btn-mark-all">✓ Marcar todo como leído</button>
+        <button class="btn btn--ghost btn--sm" id="btn-refresh">↻ Actualizar</button>
+      </div>
+    </div>
+
+    <!-- Summary badges -->
+    <div class="kpi-grid" id="alert-kpis" style="margin-bottom:24px"></div>
+
+    <!-- Filters -->
+    <div class="alerts-filters" id="alert-filters">
+      <button class="filter-btn active" data-filter="all">Todas</button>
+      <button class="filter-btn err"  data-filter="error">🔴 Críticas</button>
+      <button class="filter-btn warn" data-filter="warn">⚠️ Advertencias</button>
+      <button class="filter-btn"     data-filter="info">💡 Sugerencias</button>
+      <button class="filter-btn"     data-filter="unread">No leídas</button>
+    </div>
+
+    <div id="alerts-list"></div>
+  </main>
+</div>
+<div id="toast-container"></div>
+<script src="../js/utils.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!DR.requireAuth()) throw 'Not auth';
+  buildLayout('alertas');
+
+  let currentFilter = 'all';
+
+  function getIcon(tipo) {
+    return tipo==='error'?'🔴':tipo==='warn'?'⚠️':'💡';
+  }
+
+  function refresh() {
+    // Regenerate from current data
+    const alertas = generateAlertas(DR.getVentas(), DR.getInventario());
+    // Merge with existing leido state
+    const prev = DR.getAlertas();
+    const prevMap = {};
+    prev.forEach(a=>{ prevMap[a.id]=a.leido; });
+    alertas.forEach(a=>{ if(prevMap[a.id]!==undefined) a.leido=prevMap[a.id]; });
+    DR.setAlertas(alertas);
+    render();
+  }
+
+  function render() {
+    let alertas = DR.getAlertas();
+    const total   = alertas.length;
+    const criticas= alertas.filter(a=>a.tipo==='error').length;
+    const warns   = alertas.filter(a=>a.tipo==='warn').length;
+    const unread  = alertas.filter(a=>!a.leido).length;
+
+    document.getElementById('alert-kpis').innerHTML = `
+      <div class="kpi-card"><div class="kpi-card__label">Total alertas</div><div class="kpi-card__value">${total}</div></div>
+      <div class="kpi-card"><div class="kpi-card__label">Críticas</div><div class="kpi-card__value" style="color:var(--clr-danger)">${criticas}</div></div>
+      <div class="kpi-card"><div class="kpi-card__label">Advertencias</div><div class="kpi-card__value" style="color:var(--clr-accent)">${warns}</div></div>
+      <div class="kpi-card"><div class="kpi-card__label">Sin leer</div><div class="kpi-card__value text-primary">${unread}</div></div>
+    `;
+
+    if (currentFilter==='error')  alertas = alertas.filter(a=>a.tipo==='error');
+    if (currentFilter==='warn')   alertas = alertas.filter(a=>a.tipo==='warn');
+    if (currentFilter==='info')   alertas = alertas.filter(a=>a.tipo==='info');
+    if (currentFilter==='unread') alertas = alertas.filter(a=>!a.leido);
+
+    const list = document.getElementById('alerts-list');
+    if (!alertas.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-state__icon">✅</div><div class="empty-state__title">Sin alertas</div><p class="empty-state__desc">Todo está en orden con tu negocio.</p></div>`;
+      return;
+    }
+
+    list.innerHTML = alertas.map(a=>`
+      <div class="alert-item ${a.tipo} ${a.leido?'':'fade-in'}" id="alert-${a.id}" style="${a.leido?'opacity:.65':''}">
+        <div class="alert-item__icon">${getIcon(a.tipo)}</div>
+        <div class="alert-item__body">
+          <div class="alert-item__title">${a.titulo}</div>
+          <div class="alert-item__desc">${a.desc}</div>
+          ${a.recomendacion?`<div class="alert-item__rec">💡 <strong>Recomendación:</strong> ${a.recomendacion}</div>`:''}
+          <div class="alert-item__meta">${new Date(a.fecha).toLocaleDateString('es-PE')} · ${a.leido?'Leído':'No leído'}</div>
+        </div>
+        <div class="alert-item__actions">
+          ${!a.leido?`<button class="mark-btn" onclick="markRead('${a.id}')">Marcar leído</button>`:''}
+          <button class="mark-btn" onclick="dismiss('${a.id}')" style="color:var(--clr-danger)">Descartar</button>
+        </div>
+      </div>`).join('');
+  }
+
+  window.markRead = function(id) {
+    const alertas = DR.getAlertas().map(a=>a.id===id?{...a,leido:true}:a);
+    DR.setAlertas(alertas);
+    render();
+  };
+  window.dismiss = function(id) {
+    DR.setAlertas(DR.getAlertas().filter(a=>a.id!==id));
+    toast('Alerta descartada','','warning');
+    render();
+  };
+
+  document.getElementById('btn-mark-all').addEventListener('click',()=>{
+    DR.setAlertas(DR.getAlertas().map(a=>({...a,leido:true})));
+    toast('Todas marcadas como leídas');
+    render();
+  });
+  document.getElementById('btn-refresh').addEventListener('click',()=>{ refresh(); toast('Alertas actualizadas'); });
+
+  document.getElementById('alert-filters').addEventListener('click',function(e){
+    const btn = e.target.closest('.filter-btn');
+    if(!btn) return;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    render();
+  });
+
+  refresh();
+</script>
+</body>
+</html>

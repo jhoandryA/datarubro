@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registrar Venta – DataRubro</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/app.css"/>
+</head>
+<body>
+<div class="app-layout" id="app-layout">
+  <main class="page-content">
+    <div class="page-header">
+      <h1>Registrar Venta</h1>
+      <p>Ingresa los datos de cada venta. El dashboard se actualiza automáticamente.</p>
+    </div>
+
+    <div class="form-page-grid">
+      <!-- FORM -->
+      <div>
+        <div class="form-section">
+          <div class="form-section__title">💰 Datos de la venta</div>
+          <form id="venta-form" novalidate>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">Fecha *</label>
+                <input class="form-control" type="date" id="fecha" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Hora (opcional)</label>
+                <input class="form-control" type="time" id="hora"/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Producto *</label>
+              <input class="form-control" type="text" id="producto" list="productos-list" placeholder="Nombre del producto o servicio" required autocomplete="off"/>
+              <datalist id="productos-list"></datalist>
+              <span class="form-hint">Escribe para ver sugerencias de tu inventario.</span>
+            </div>
+            <div class="form-row" style="margin-bottom:16px">
+              <div class="form-group">
+                <label class="form-label">Cantidad *</label>
+                <input class="form-control" type="number" id="cantidad" min="0.5" step="0.5" placeholder="1" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Precio unitario (S/) *</label>
+                <input class="form-control" type="number" id="precio" min="0" step="0.10" placeholder="0.00" required/>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom:16px">
+              <label class="form-label">Tipo de pago</label>
+              <select class="form-control" id="tipo-pago">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Yape/Plin">Yape / Plin</option>
+                <option value="Tarjeta">Tarjeta</option>
+                <option value="Transferencia">Transferencia bancaria</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:20px">
+              <label class="form-label">Notas (opcional)</label>
+              <input class="form-control" type="text" id="notas" placeholder="Ej: cliente frecuente, descuento, etc."/>
+            </div>
+            <button type="submit" class="btn btn--primary" style="width:100%;justify-content:center">
+              ✓ Guardar venta
+            </button>
+          </form>
+        </div>
+
+        <!-- Ventas del día -->
+        <div class="form-section" style="margin-top:20px">
+          <div class="form-section__title" style="display:flex;justify-content:space-between;align-items:center">
+            Ventas de hoy
+            <span id="hoy-total" style="font-family:var(--ff-display);color:var(--clr-primary);font-size:1.1rem;font-weight:800"></span>
+          </div>
+          <div id="hoy-list">
+            <div class="empty-state" style="padding:32px 0">
+              <div class="empty-state__icon">📋</div>
+              <p class="empty-state__desc">Aún no hay ventas registradas hoy.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY SIDEBAR -->
+      <div>
+        <div class="summary-box">
+          <div class="summary-box__title">Resumen del mes</div>
+          <div class="summary-line"><span>Total ventas</span><span class="summary-line__val" id="s-total">S/ 0.00</span></div>
+          <div class="summary-line"><span>N° transacciones</span><span class="summary-line__val" id="s-num">0</span></div>
+          <div class="summary-line"><span>Ticket promedio</span><span class="summary-line__val" id="s-ticket">S/ 0.00</span></div>
+          <div class="summary-line"><span>Mejor día</span><span class="summary-line__val" id="s-mejor">—</span></div>
+          <div class="summary-total"><span>Hoy</span><span id="s-hoy">S/ 0.00</span></div>
+        </div>
+
+        <div class="summary-box" style="margin-top:16px">
+          <div class="summary-box__title">Últimas 5 ventas</div>
+          <div id="recent-5"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-container"></div>
+<script src="../js/utils.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!DR.requireAuth()) throw 'Not auth';
+  buildLayout('ventas');
+
+  const inventario = DR.getInventario();
+
+  // Populate datalist
+  const dl = document.getElementById('productos-list');
+  inventario.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.nombre;
+    dl.appendChild(opt);
+  });
+
+  // Set today's date
+  document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+
+  // Autofill price from inventory
+  document.getElementById('producto').addEventListener('input', function() {
+    const match = inventario.find(p => p.nombre.toLowerCase() === this.value.toLowerCase());
+    if (match && !document.getElementById('precio').value) {
+      document.getElementById('precio').value = match.precio.toFixed(2);
+    }
+  });
+
+  function refreshUI() {
+    const ventas = DR.getVentas();
+    const hoy    = new Date().toISOString().split('T')[0];
+    const mes    = hoy.slice(0,7);
+    const hoyV   = ventas.filter(v=>v.fecha===hoy);
+    const mesV   = ventas.filter(v=>v.fecha.startsWith(mes));
+    const hoyT   = hoyV.reduce((s,v)=>s+v.total,0);
+    const mesT   = mesV.reduce((s,v)=>s+v.total,0);
+    const ticket = mesV.length ? mesT/mesV.length : 0;
+
+    // Best day
+    const dayMap={};
+    mesV.forEach(v=>{ dayMap[v.fecha]=(dayMap[v.fecha]||0)+v.total; });
+    const bestDay = Object.entries(dayMap).sort((a,b)=>b[1]-a[1])[0];
+
+    document.getElementById('s-total').textContent  = fmt(mesT);
+    document.getElementById('s-num').textContent    = mesV.length;
+    document.getElementById('s-ticket').textContent = fmt(ticket);
+    document.getElementById('s-mejor').textContent  = bestDay ? fmtDate(bestDay[0]) : '—';
+    document.getElementById('s-hoy').textContent    = fmt(hoyT);
+    document.getElementById('hoy-total').textContent = fmt(hoyT);
+
+    // Hoy list
+    const hoyList = document.getElementById('hoy-list');
+    if (hoyV.length === 0) {
+      hoyList.innerHTML = '<div class="empty-state" style="padding:32px 0"><div class="empty-state__icon">📋</div><p class="empty-state__desc">Aún no hay ventas hoy.</p></div>';
+    } else {
+      hoyList.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Producto</th><th>Cant.</th><th>Total</th><th>Pago</th><th></th></tr></thead>
+        <tbody>
+          ${[...hoyV].reverse().map(v=>`<tr>
+            <td><strong>${v.producto}</strong></td>
+            <td>${v.cantidad}</td>
+            <td class="text-primary" style="font-weight:700">${fmt(v.total)}</td>
+            <td><span class="tag tag--ok">${v.tipoPago||'Efectivo'}</span></td>
+            <td><button class="btn btn--ghost btn--sm" onclick="deleteVenta('${v.id}')">🗑</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    }
+
+    // Recent 5
+    const r5 = document.getElementById('recent-5');
+    const last5 = [...ventas].sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,5);
+    r5.innerHTML = last5.map(v=>`
+      <div class="summary-line">
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%;font-size:.83rem">${v.producto}</span>
+        <span class="summary-line__val" style="color:var(--clr-primary);font-size:.88rem">${fmt(v.total)}</span>
+      </div>`).join('') || '<p class="text-muted" style="font-size:.82rem">Sin ventas aún.</p>';
+  }
+
+  window.deleteVenta = function(id) {
+    const ventas = DR.getVentas().filter(v=>v.id!==id);
+    DR.setVentas(ventas);
+    toast('Venta eliminada','','warning');
+    refreshUI();
+  };
+
+  document.getElementById('venta-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fecha    = document.getElementById('fecha').value;
+    const producto = document.getElementById('producto').value.trim();
+    const cantidad = parseFloat(document.getElementById('cantidad').value);
+    const precio   = parseFloat(document.getElementById('precio').value);
+    const tipoPago = document.getElementById('tipo-pago').value;
+    const notas    = document.getElementById('notas').value.trim();
+
+    if (!fecha||!producto||!cantidad||!precio) {
+      toast('Campos requeridos','Completa producto, cantidad y precio','error'); return;
+    }
+
+    const venta = {
+      id: 'V'+Date.now(),
+      fecha, producto, cantidad, precio,
+      total: +(cantidad * precio).toFixed(2),
+      tipoPago, notas,
+    };
+
+    const ventas = DR.getVentas();
+    ventas.push(venta);
+    DR.setVentas(ventas);
+
+    // Update inventory stock
+    const inv = DR.getInventario();
+    const prodInv = inv.find(p=>p.nombre.toLowerCase()===producto.toLowerCase());
+    if (prodInv) {
+      prodInv.stock = Math.max(0, prodInv.stock - cantidad);
+      DR.setInventario(inv);
+      if (prodInv.stock <= prodInv.stockMin) {
+        toast('⚠️ Stock bajo', `${prodInv.nombre}: solo ${prodInv.stock} unidades`, 'warning');
+      }
+    }
+
+    // Regenerate alerts
+    DR.setAlertas(generateAlertas(ventas, DR.getInventario()));
+
+    toast('✓ Venta registrada', `${producto} · ${fmt(venta.total)}`);
+    this.reset();
+    document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+    refreshUI();
+  });
+
+  refreshUI();
+</script>
+</body>
+</html>

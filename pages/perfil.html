@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfil – DataRubro</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <link rel="stylesheet" href="../css/app.css"/>
+</head>
+<body>
+<div class="app-layout" id="app-layout">
+  <main class="page-content">
+    <div class="page-header">
+      <h1>Perfil y configuración</h1>
+      <p>Gestiona tu cuenta y las preferencias de tu negocio.</p>
+    </div>
+
+    <div class="settings-grid fade-in">
+      <!-- Menu -->
+      <div>
+        <div class="settings-menu">
+          <div class="settings-menu-item active" data-panel="cuenta">👤 Mi cuenta</div>
+          <div class="settings-menu-item" data-panel="negocio">🏪 Mi negocio</div>
+          <div class="settings-menu-item" data-panel="datos">🗄️ Mis datos</div>
+          <div class="settings-menu-item" data-panel="plan">💳 Plan y facturación</div>
+        </div>
+      </div>
+
+      <!-- Panels -->
+      <div>
+        <!-- CUENTA -->
+        <div class="settings-panel" id="panel-cuenta">
+          <div class="settings-panel__title">Mi cuenta</div>
+          <div style="display:flex;align-items:center;gap:20px;margin-bottom:28px">
+            <div id="big-avatar" style="width:64px;height:64px;border-radius:50%;background:var(--clr-primary);color:#0b0f1a;display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-size:1.6rem;font-weight:800"></div>
+            <div>
+              <div id="disp-nombre" style="font-size:1.1rem;font-weight:700"></div>
+              <div id="disp-email" style="font-size:.85rem;color:var(--clr-muted)"></div>
+              <div id="disp-plan"  style="font-size:.8rem;margin-top:4px"></div>
+            </div>
+          </div>
+          <form id="cuenta-form" class="auth-form" style="max-width:420px" novalidate>
+            <div class="form-group">
+              <label class="form-label">Nombre completo</label>
+              <input class="form-control" type="text" id="u-nombre"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Correo electrónico</label>
+              <input class="form-control" type="email" id="u-email"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nueva contraseña (dejar vacío para no cambiar)</label>
+              <input class="form-control" type="password" id="u-pass" placeholder="••••••••"/>
+            </div>
+            <button type="submit" class="btn btn--primary btn--sm">Guardar cambios</button>
+          </form>
+        </div>
+
+        <!-- NEGOCIO -->
+        <div class="settings-panel hidden" id="panel-negocio">
+          <div class="settings-panel__title">Mi negocio</div>
+          <form id="negocio-form" class="auth-form" style="max-width:420px" novalidate>
+            <div class="form-group">
+              <label class="form-label">Nombre del negocio</label>
+              <input class="form-control" type="text" id="n-nombre"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Rubro</label>
+              <select class="form-control" id="n-rubro">
+                <option value="Bodega">🛒 Bodega</option>
+                <option value="Restaurante">🍽️ Restaurante</option>
+                <option value="Farmacia">💊 Farmacia</option>
+                <option value="Ferretería">🔧 Ferretería</option>
+                <option value="Librería">📚 Librería</option>
+                <option value="Ropa">👗 Ropa</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Dirección (opcional)</label>
+              <input class="form-control" type="text" id="n-direccion" placeholder="Av. Ejemplo 123, Lima"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Teléfono (opcional)</label>
+              <input class="form-control" type="tel" id="n-telefono" placeholder="+51 9XX XXX XXX"/>
+            </div>
+            <button type="submit" class="btn btn--primary btn--sm">Guardar negocio</button>
+          </form>
+        </div>
+
+        <!-- DATOS -->
+        <div class="settings-panel hidden" id="panel-datos">
+          <div class="settings-panel__title">Gestión de datos</div>
+          <div style="display:flex;flex-direction:column;gap:16px;max-width:480px">
+            <div class="alert alert--warning">
+              <span class="alert__icon">⚠️</span>
+              <div>
+                <div class="alert__title">Datos almacenados localmente</div>
+                <div class="alert__desc">Tus ventas e inventario se guardan en este navegador. Exporta antes de cambiar de dispositivo.</div>
+              </div>
+            </div>
+            <div id="data-stats" style="font-size:.88rem;color:var(--clr-muted);line-height:2"></div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn--outline btn--sm" id="btn-export-all">📤 Exportar todo (JSON)</button>
+              <button class="btn btn--outline btn--sm" id="btn-import-all">📥 Importar datos (JSON)</button>
+              <input type="file" id="import-file" accept=".json" style="display:none"/>
+            </div>
+            <div style="border-top:1px solid var(--clr-border);padding-top:16px">
+              <p style="font-size:.88rem;color:var(--clr-muted);margin-bottom:12px">Zona de peligro: estas acciones no se pueden deshacer.</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn--outline btn--sm" id="btn-clear-ventas" style="color:var(--clr-accent);border-color:var(--clr-accent)">🗑 Limpiar ventas</button>
+                <button class="btn btn--danger btn--sm" id="btn-reset-all">⚠️ Resetear todo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PLAN -->
+        <div class="settings-panel hidden" id="panel-plan">
+          <div class="settings-panel__title">Plan y facturación</div>
+          <div id="plan-info" style="margin-bottom:24px"></div>
+          <div class="pricing-grid" style="margin-top:0">
+            <div class="plan-card" style="border-color:var(--clr-primary)">
+              <div class="plan-name">Plan Pro</div>
+              <div class="plan-price">S/ 39 <span>/ mes</span></div>
+              <ul class="plan-features">
+                <li>Ventas ilimitadas</li>
+                <li>Dashboard completo</li>
+                <li>Alertas automáticas</li>
+                <li>Reportes descargables</li>
+                <li>Recomendaciones</li>
+              </ul>
+              <button class="btn btn--primary" style="width:100%;justify-content:center" onclick="toast('Próximamente','El pago en línea estará disponible pronto','warning')">Suscribirme</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<div id="toast-container"></div>
+<script src="../js/utils.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+  if (!DR.requireAuth()) throw 'Not auth';
+  buildLayout('perfil');
+  const user = DR.getUser();
+
+  // Fill account form
+  document.getElementById('big-avatar').textContent = user.nombre.charAt(0);
+  document.getElementById('disp-nombre').textContent = user.nombre;
+  document.getElementById('disp-email').textContent  = user.email;
+  document.getElementById('disp-plan').innerHTML = `<span class="badge" style="font-size:.7rem">${user.plan||'Pro'}</span>`;
+  document.getElementById('u-nombre').value = user.nombre;
+  document.getElementById('u-email').value  = user.email;
+  document.getElementById('n-nombre').value = user.negocio||'';
+  document.getElementById('n-rubro').value  = user.rubro;
+  document.getElementById('n-direccion').value = user.direccion||'';
+  document.getElementById('n-telefono').value  = user.telefono||'';
+
+  // Panel switching
+  document.querySelectorAll('.settings-menu-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      document.querySelectorAll('.settings-menu-item').forEach(i=>i.classList.remove('active'));
+      item.classList.add('active');
+      const pid = 'panel-'+item.dataset.panel;
+      document.querySelectorAll('.settings-panel').forEach(p=>p.classList.add('hidden'));
+      document.getElementById(pid).classList.remove('hidden');
+      if (item.dataset.panel==='datos') refreshDataStats();
+      if (item.dataset.panel==='plan') refreshPlanInfo();
+    });
+  });
+
+  document.getElementById('cuenta-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    const updated = { ...user, nombre: document.getElementById('u-nombre').value.trim(), email: document.getElementById('u-email').value.trim() };
+    DR.setUser(updated);
+    const reg = DR.load('registered_user');
+    if (reg) DR.save('registered_user', {...reg, ...updated});
+    toast('✓ Cuenta actualizada');
+    document.getElementById('big-avatar').textContent = updated.nombre.charAt(0);
+    document.getElementById('disp-nombre').textContent = updated.nombre;
+    document.getElementById('disp-email').textContent  = updated.email;
+  });
+
+  document.getElementById('negocio-form').addEventListener('submit',function(e){
+    e.preventDefault();
+    const updated = { ...DR.getUser(), negocio: document.getElementById('n-nombre').value.trim(), rubro: document.getElementById('n-rubro').value, direccion: document.getElementById('n-direccion').value.trim(), telefono: document.getElementById('n-telefono').value.trim() };
+    DR.setUser(updated);
+    toast('✓ Datos del negocio guardados');
+  });
+
+  function refreshDataStats() {
+    const ventas = DR.getVentas();
+    const inv    = DR.getInventario();
+    document.getElementById('data-stats').innerHTML = `
+      <strong>Ventas registradas:</strong> ${ventas.length}<br/>
+      <strong>Productos en inventario:</strong> ${inv.length}<br/>
+      <strong>Alertas guardadas:</strong> ${DR.getAlertas().length}
+    `;
+  }
+
+  function refreshPlanInfo() {
+    document.getElementById('plan-info').innerHTML = `
+      <div class="alert alert--success"><span class="alert__icon">✅</span><div><div class="alert__title">Plan actual: ${user.plan||'Pro (Prueba)'}</div><div class="alert__desc">Disfruta de todas las funciones durante tu período de prueba.</div></div></div>
+    `;
+  }
+
+  document.getElementById('btn-export-all').addEventListener('click',()=>{
+    const data = { user: DR.getUser(), ventas: DR.getVentas(), inventario: DR.getInventario(), alertas: DR.getAlertas(), exportado: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a'); a.href=url; a.download='datarubro_backup.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast('✓ Datos exportados','datarubro_backup.json');
+  });
+
+  document.getElementById('btn-import-all').addEventListener('click',()=>document.getElementById('import-file').click());
+  document.getElementById('import-file').addEventListener('change',function(e){
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.ventas)    DR.setVentas(data.ventas);
+        if (data.inventario)DR.setInventario(data.inventario);
+        if (data.alertas)   DR.setAlertas(data.alertas);
+        toast('✓ Datos importados correctamente'); refreshDataStats();
+      } catch { toast('Error al importar','Archivo JSON inválido','error'); }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById('btn-clear-ventas').addEventListener('click',()=>{
+    if(!confirm('¿Eliminar TODAS las ventas? Esta acción no se puede deshacer.')) return;
+    DR.setVentas([]);
+    toast('Ventas eliminadas','','warning'); refreshDataStats();
+  });
+  document.getElementById('btn-reset-all').addEventListener('click',()=>{
+    if(!confirm('¿Resetear TODO (ventas + inventario + alertas)? Esta acción no se puede deshacer.')) return;
+    DR.setVentas([]); DR.setInventario([]); DR.setAlertas([]);
+    toast('Todo reseteado','','error'); refreshDataStats();
+  });
+</script>
+</body>
+</html>

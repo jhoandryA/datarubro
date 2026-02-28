@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Iniciar sesión – DataRubro</title>
+  <link rel="stylesheet" href="../css/main.css"/>
+  <style>
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .auth-wrap { width: min(440px,100%); }
+    .auth-logo { font-family:var(--ff-display); font-size:1.6rem; font-weight:800; margin-bottom:32px; text-align:center; }
+    .auth-logo span { color:var(--clr-primary); }
+    .auth-card { background:var(--clr-surface); border:1px solid var(--clr-border); border-radius:var(--radius-xl); padding:36px; }
+    .auth-title { font-size:1.4rem; font-weight:700; margin-bottom:6px; }
+    .auth-sub   { color:var(--clr-muted); font-size:.9rem; margin-bottom:28px; }
+    .auth-form  { display:flex; flex-direction:column; gap:18px; }
+    .auth-footer { text-align:center; margin-top:20px; font-size:.88rem; color:var(--clr-muted); }
+    .auth-footer a { color:var(--clr-primary); font-weight:600; }
+    .auth-demo  { margin-top:20px; background:rgba(0,200,150,.07); border:1px solid rgba(0,200,150,.2); border-radius:var(--radius-md); padding:14px 18px; font-size:.82rem; }
+    .auth-demo strong { color:var(--clr-primary); }
+    .divider { display:flex; align-items:center; gap:12px; color:var(--clr-muted); font-size:.8rem; margin:4px 0; }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--clr-border); }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <div class="auth-logo"><a href="../index.html" style="color:inherit">Data<span>Rubro</span></a></div>
+  <div class="auth-card">
+    <h1 class="auth-title">Bienvenido de nuevo</h1>
+    <p class="auth-sub">Ingresa tus datos para acceder a tu dashboard</p>
+
+    <form class="auth-form" id="login-form" novalidate>
+      <div class="form-group">
+        <label class="form-label" for="email">Correo electrónico</label>
+        <input class="form-control" type="email" id="email" placeholder="tunegocio@gmail.com" required/>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Contraseña</label>
+        <input class="form-control" type="password" id="password" placeholder="••••••••" required/>
+      </div>
+      <button type="submit" class="btn btn--primary" id="login-btn" style="width:100%;justify-content:center">
+        Iniciar sesión
+      </button>
+    </form>
+
+    <div class="divider">o usa la cuenta demo</div>
+
+    <button class="btn btn--outline" id="demo-btn" style="width:100%;justify-content:center">
+      🚀 Entrar con cuenta demo (Bodega)
+    </button>
+
+    <div class="auth-demo">
+      <strong>Demo disponible:</strong> Explora todas las funciones sin crear una cuenta.
+      Los datos son de ejemplo y se guardan solo en tu navegador.
+    </div>
+
+    <p class="auth-footer">
+      ¿No tienes cuenta? <a href="register.html">Regístrate gratis →</a>
+    </p>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/utils.js"></script>
+<script>
+  // If already logged in, redirect
+  if (DR.getUser()) window.location.href = 'dashboard.html';
+
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const pass  = document.getElementById('password').value;
+    if (!email || !pass) { toast('Campos incompletos','Ingresa tu email y contraseña','error'); return; }
+    // Simulate login (check localStorage for registered user)
+    const registered = DR.load('registered_user');
+    if (registered && registered.email === email) {
+      DR.setUser(registered);
+      toast('¡Bienvenido!', registered.nombre);
+      setTimeout(()=>{ window.location.href='dashboard.html'; }, 800);
+    } else {
+      toast('Credenciales incorrectas','Usa el botón de demo o regístrate','error');
+    }
+  });
+
+  document.getElementById('demo-btn').addEventListener('click', function() {
+    const demoUser = { nombre:'Demo Bodega', email:'demo@datarubro.pe', rubro:'Bodega', plan:'Pro', isDemo:true };
+    DR.setUser(demoUser);
+    const sample = generateSampleData('Bodega');
+    DR.setVentas(sample.ventas);
+    DR.setInventario(sample.inventario);
+    DR.setAlertas(generateAlertas(sample.ventas, sample.inventario));
+    toast('Cuenta demo cargada','Entrando al dashboard...','success');
+    setTimeout(()=>{ window.location.href='dashboard.html'; }, 800);
+  });
+</script>
+</body>
+</html>
