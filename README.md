@@ -30,7 +30,7 @@ datarubro/
 │   ├── reportes.html       ← Reportes descargables (CSV/TXT)
 │   └── perfil.html         ← Perfil y configuración
 └── README.md
-```
+
 
 ## ✨ Funcionalidades
 
