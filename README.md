@@ -4,7 +4,7 @@
 
 DataRubro es una plataforma digital que ayuda a micro y pequeños empresarios a tomar mejores decisiones usando sus propios datos de ventas e inventario. Sin conocimientos técnicos, sin instalación.
 
-🌐 **Demo en vivo:** [tu-usuario.github.io/datarubro](https://tu-usuario.github.io/datarubro)
+🌐 **Demo en vivo:** [jhoandryA.github.io/datarubro](https://jhoandryA.github.io/datarubro)
 
 ---
 
@@ -30,70 +30,7 @@ datarubro/
 │   ├── reportes.html       ← Reportes descargables (CSV/TXT)
 │   └── perfil.html         ← Perfil y configuración
 └── README.md
-```
 
----
-
-## 🚀 Cómo publicar en GitHub Pages
-
-### Paso 1 – Crear repositorio en GitHub
-
-1. Ve a [github.com](https://github.com) e inicia sesión
-2. Clic en **"New repository"**
-3. Nombre: `datarubro`
-4. Marca **"Public"**
-5. **NO** marques "Add a README" (ya tiene uno)
-6. Clic en **"Create repository"**
-
-### Paso 2 – Subir el proyecto desde VS Code
-
-Abre VS Code y la carpeta del proyecto, luego en la terminal:
-
-```bash
-# Inicializar git
-git init
-
-# Agregar todos los archivos
-git add .
-
-# Primer commit
-git commit -m "🚀 Proyecto DataRubro inicial"
-
-# Conectar con GitHub (reemplaza TU-USUARIO con tu usuario de GitHub)
-git remote add origin https://github.com/TU-USUARIO/datarubro.git
-
-# Subir al repositorio
-git branch -M main
-git push -u origin main
-```
-
-### Paso 3 – Activar GitHub Pages
-
-1. Ve a tu repositorio en GitHub
-2. Clic en **"Settings"** (pestaña superior)
-3. En el menú lateral: **"Pages"**
-4. En **"Source"**: selecciona `Deploy from a branch`
-5. En **"Branch"**: selecciona `main` y carpeta `/root`
-6. Clic en **"Save"**
-7. Espera 1-2 minutos
-
-Tu sitio estará en: `https://TU-USUARIO.github.io/datarubro`
-
----
-
-## 🔄 Actualizar el sitio
-
-Cada vez que hagas cambios:
-
-```bash
-git add .
-git commit -m "descripción del cambio"
-git push
-```
-
-GitHub Pages se actualiza automáticamente en ~1 minuto.
-
----
 
 ## ✨ Funcionalidades
 
@@ -128,4 +65,4 @@ GitHub Pages se actualiza automáticamente en ~1 minuto.
 
 ---
 
-*Desarrollado como proyecto de E-Business · DataRubro © 2025*
+*Desarrollado como proyecto de E-Business · DataRubro © 2026*
