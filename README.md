@@ -49,11 +49,9 @@ datarubro/
 
 ## 🛠️ Tecnologías
 
-- HTML5 + CSS3 + JavaScript vanilla
-- Sin frameworks ni dependencias externas
-- Almacenamiento en `localStorage` (solo en el navegador)
-- Compatible con GitHub Pages (100% estático)
-
+- HTML
+- CSS 
+- JavaScript
 ---
 
 ## 📝 Notas
